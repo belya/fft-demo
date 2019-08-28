@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FFT Transform</title>
+    <style type="text/css">
+        #bci {
+            margin: auto;
+            position: relative; 
+            width:90vw;
+        }
+    </style>
+</head>
+<body>
+    <div id="bci">
+        <fft-chart></fft-chart>
+    </div>
+
+    <script type="text/javascript" src="./node_modules/vue/dist/vue.js"></script>
+    <script type="text/javascript" src="./node_modules/chart.js/dist/Chart.js"></script>
+    <script type="text/javascript" src="./node_modules/vue-chartjs/dist/vue-chartjs.js"></script>
+    <script type="text/javascript" src="./node_modules/socket.io-client/dist/socket.io.js"></script>
+    <script type="text/javascript">
+        var SOCKET_URL = "http://localhost:5000"
+        var FFT_EVENT = "bci:fft"
+        var INIT_FFT_EVENT = "bci:fft:ready"
+
+        Vue.component("fft-chart", {
+            extends: VueChartJs.Line,
+            mixins: [VueChartJs.mixins.reactiveData],
+            data: function() {
+                return {
+                    chartData: null,
+                    options: {
+                        maintainAspectRatio: false,
+                        events: [],
+                        animationSteps: 60,
+                        scales: {
+                            yAxes: [{
+                                display: true,
+                                ticks: {
+                                    beginAtZero: true,
+                                    max: 5000,
+                                    min: 0
+                                }
+                            }]
+                        },
+                    },
+                    initialRun: true
+                }
+            },
+            mounted: function() {
+                this.initializeSocket()
+            },
+            methods: {
+                initializeSocket: function() {
+                    this.socket = io(SOCKET_URL)
+                    this.socket.on('connect', () => {
+                        this.socket.emit(INIT_FFT_EVENT, {});
+                    });
+                    this.socket.on(FFT_EVENT, (data) => { 
+                        this.chartData = this.setSpectre(data)
+
+                        if (this.initialRun) {
+                            this.initialRun = false
+                            this.renderChart(this.chartData, this.options)
+                        }
+                    });
+                },
+                setSpectre: function(data) {
+                    return {
+                        labels: this.getLabels(data),
+                        datasets: data.map((e) => {
+                            return {
+                                label: e[0],
+                                data: e[1]
+                            }
+                        })
+                    }
+                },
+                getLabels: function(data) {
+                    var length = data[0][1].length
+                    var array = []
+                    for (var i = 0; i < length; i++)
+                        array.push(i + " Hz")
+                    return array 
+                }
+            }
+        })
+
+        new Vue({
+            el: "#bci"
+        })
+    </script>
+</body>
+</html>
