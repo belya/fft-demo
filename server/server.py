@@ -14,8 +14,7 @@ thread_lock = Lock()
 
 
 def background_thread():
-    while True:
-        handle_fft(socketio)
+    handle_fft(socketio)
 
 
 @socketio.on('bci:fft:ready')
@@ -24,7 +23,7 @@ def handle_test_message(json):
     with thread_lock:
         if thread is None:
             thread = socketio.start_background_task(background_thread)
-    print("Bands is ready to send")
+    print("Bands are ready to send")
 
 
 @app.route("/")
