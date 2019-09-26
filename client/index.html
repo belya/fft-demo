@@ -12,7 +12,8 @@
 </head>
 <body>
     <div id="bci">
-        <fft-chart></fft-chart>
+        <fft-chart :fft="fftData"></fft-chart>
+        <series-chart :series="seriesData"></series-chart>
     </div>
 
     <script type="text/javascript" src="./node_modules/vue/dist/vue.js"></script>
@@ -21,12 +22,14 @@
     <script type="text/javascript" src="./node_modules/socket.io-client/dist/socket.io.js"></script>
     <script type="text/javascript">
         var SOCKET_URL = "http://localhost:5000"
+        var INIT_EVENT = "bci:ready"
         var FFT_EVENT = "bci:fft"
-        var INIT_FFT_EVENT = "bci:fft:ready"
+        var SERIES_EVENT = "bci:series"
 
         Vue.component("fft-chart", {
             extends: VueChartJs.Line,
             mixins: [VueChartJs.mixins.reactiveData],
+            props: ["fft"],
             data: function() {
                 return {
                     chartData: null,
@@ -45,34 +48,26 @@
                             }]
                         },
                     },
-                    initialRun: true
+                }
+            },
+            watch: {
+                fft: function() {
+                    this.chartData = this.setSpectre(this.fft)
                 }
             },
             mounted: function() {
-                this.initializeSocket()
+                this.renderChart(this.chartData, this.options)
             },
             methods: {
-                initializeSocket: function() {
-                    this.socket = io(SOCKET_URL)
-                    this.socket.on('connect', () => {
-                        this.socket.emit(INIT_FFT_EVENT, {});
-                    });
-                    this.socket.on(FFT_EVENT, (data) => { 
-                        this.chartData = this.setSpectre(data)
-
-                        if (this.initialRun) {
-                            this.initialRun = false
-                            this.renderChart(this.chartData, this.options)
-                        }
-                    });
-                },
                 setSpectre: function(data) {
                     return {
                         labels: this.getLabels(data),
                         datasets: data.map((e) => {
                             return {
                                 label: e[0],
-                                data: e[1]
+                                data: e[1],
+                                pointRadius: 0,
+                                fill: false
                             }
                         })
                     }
@@ -87,8 +82,86 @@
             }
         })
 
+        Vue.component("series-chart", {
+            extends: VueChartJs.Line,
+            mixins: [VueChartJs.mixins.reactiveData],
+            props: ["series"],
+            data: function() {
+                return {
+                    chartData: null,
+                    options: {
+                        maintainAspectRatio: false,
+                        events: [],
+                        animation: false,
+                    },
+                }
+            },
+            watch: {
+                series: function() {
+                    var scaledSeries = this.scaleSeries(this.series)
+                    this.chartData = this.setSeries(scaledSeries)
+                }
+            },
+            mounted: function() {
+                this.renderChart(this.chartData, this.options)
+            },
+            methods: {
+                setSeries: function(data) {
+                    return {
+                        labels: this.getLabels(data),
+                        datasets: data.map((e, i) => {
+                            return {
+                                label: e[0],
+                                data: e[1],
+                                pointRadius: 0,
+                                fill: false
+                            }
+                        })
+                    }
+                },
+                scaleSeries: function(data) {
+                    return data.map((e, i) => {
+                        var mean = e[1].reduce(function (accumulator, currentValue){
+                          return accumulator + currentValue;
+                        }) / e[1].length;
+                        var scaled = e[1].map(e => e - mean)
+                        return [e[0], scaled]
+                    })
+                },
+                getLabels: function(data) {
+                    var length = data[0][1].length
+                    var array = []
+                    for (var i = 0; i < length; i++)
+                        array.push("")
+                    return array 
+                }
+            }
+        })
+
         new Vue({
-            el: "#bci"
+            el: "#bci",
+            data: {
+                fftData: null,
+                seriesData: null
+            },
+            mounted: function() {
+                console.log("The app is ready")
+                this.initializeSocket()
+            },
+            methods: {
+                initializeSocket: function() {
+                    this.socket = io(SOCKET_URL)
+                    this.socket.on('connect', () => {
+                        this.socket.emit(INIT_EVENT, {});
+                    });
+                    this.socket.on(FFT_EVENT, (data) => { 
+                        this.fftData = data
+                    });
+                    this.socket.on(SERIES_EVENT, (data) => {
+                        this.seriesData = data
+                    })
+                }
+            }
         })
     </script>
 </body>

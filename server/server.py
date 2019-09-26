@@ -1,7 +1,9 @@
 from flask import Flask, render_template
 from flask_socketio import SocketIO, emit
-from handlers.fft import handle_fft
+from handlers.fft import FFTHandler
+from handlers.series import SeriesHandler
 from threading import Lock
+from streams.mqtt_stream import MQTTStream as Stream
 
 
 app = Flask(__name__, template_folder="../client/", static_folder="../client/", static_url_path='')
@@ -14,10 +16,16 @@ thread_lock = Lock()
 
 
 def background_thread():
-    handle_fft(socketio)
+    fft = FFTHandler(socketio)
+    series = SeriesHandler(socketio)
+
+    stream = Stream()
+    stream.add_handler(fft)
+    stream.add_handler(series)
+    stream.receive()
 
 
-@socketio.on('bci:fft:ready')
+@socketio.on('bci:ready')
 def handle_test_message(json):
     global thread
     with thread_lock:
