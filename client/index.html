@@ -64,6 +64,7 @@
                         labels: this.getLabels(data),
                         datasets: data.map((e) => {
                             return {
+                                lineTension: 0,
                                 label: e[0],
                                 data: e[1],
                                 pointRadius: 0,
@@ -93,6 +94,16 @@
                         maintainAspectRatio: false,
                         events: [],
                         animation: false,
+                        scales: {
+                            yAxes: [{
+                                display: true,
+                                ticks: {
+                                    beginAtZero: true,
+                                    max: 500,
+                                    min: -500
+                                }
+                            }]
+                        },
                     },
                 }
             },
@@ -111,6 +122,7 @@
                         labels: this.getLabels(data),
                         datasets: data.map((e, i) => {
                             return {
+                                lineTension: 0,
                                 label: e[0],
                                 data: e[1],
                                 pointRadius: 0,

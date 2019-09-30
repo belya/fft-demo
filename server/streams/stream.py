@@ -4,7 +4,7 @@ import pandas as pd
 HARDCODED_SAMPLE_RATE = 256
 HARDCODED_CHANNEL_NAMES = ["Channel {}".format(i) for i in range(1, 9)]
 
-SPEED = 1
+SPEED = 10
 
 class Stream:
     prev_chunk = None
