@@ -35,7 +35,6 @@
                     chartData: null,
                     options: {
                         maintainAspectRatio: false,
-                        events: [],
                         animationSteps: 60,
                         scales: {
                             yAxes: [{
@@ -92,15 +91,14 @@
                     chartData: null,
                     options: {
                         maintainAspectRatio: false,
-                        events: [],
                         animation: false,
                         scales: {
                             yAxes: [{
                                 display: true,
                                 ticks: {
-                                    beginAtZero: true,
-                                    max: 500,
-                                    min: -500
+                                    max: 16,
+                                    min: 0,
+                                    beginAtZero: true
                                 }
                             }]
                         },
@@ -109,8 +107,7 @@
             },
             watch: {
                 series: function() {
-                    var scaledSeries = this.scaleSeries(this.series)
-                    this.chartData = this.setSeries(scaledSeries)
+                    this.chartData = this.setSeries(this.series)
                 }
             },
             mounted: function() {
