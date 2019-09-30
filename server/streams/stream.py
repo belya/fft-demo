@@ -17,15 +17,8 @@ class Stream:
 
     # TODO add sliding window
     def _load_chunk(self, chunk):
-        if self.prev_chunk is not None:
-            total_chunk = pd.concat([self.prev_chunk, chunk])
-            for i in range(0, self.prev_chunk.shape[0], SPEED):
-                sliding_chunk = total_chunk[i:i + chunk.shape[0]]
-
-                for handler in self.handlers:
-                    handler.handle(sliding_chunk)
-
-        self.prev_chunk = chunk
+        for handler in self.handlers:
+            handler.handle(chunk)
 
     def add_handler(self, handler):
         self.handlers.append(handler)

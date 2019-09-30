@@ -41,7 +41,7 @@
                                 display: true,
                                 ticks: {
                                     beginAtZero: true,
-                                    max: 5000,
+                                    max: 100,
                                     min: 0
                                 }
                             }]
@@ -93,10 +93,15 @@
                         maintainAspectRatio: false,
                         animation: false,
                         scales: {
+                            xAxes: [{
+                                gridLines: {
+                                    color: "rgba(0, 0, 0, 0)",
+                                }
+                            }],
                             yAxes: [{
                                 display: true,
                                 ticks: {
-                                    max: 16,
+                                    max: 100,
                                     min: 0,
                                     beginAtZero: true
                                 }
